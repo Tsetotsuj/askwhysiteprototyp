@@ -4,7 +4,7 @@ Created on Thu Oct 29 12:12:13 2020
 
 @author: Haddoune
 """
-import hashlib
+#import hashlib
 import pandas as pd
 import streamlit as st
 import awesome_streamlit as ast
@@ -36,13 +36,14 @@ def write():
 # Security
 #passlib,hashlib,bcrypt,scrypt
 
-def make_hashes(poids):
-	return hashlib.sha256(str.encode(poids)).hexdigest()
+#def make_hashes(poids):
+#	return hashlib.sha256(str.encode(poids)).hexdigest()
 
-def check_hashes(poids,hashed_text):
-	if make_hashes(poids) == hashed_text:
-		return hashed_text
-	return False
+#def check_hashes(poids,hashed_text):
+#	if make_hashes(poids) == hashed_text:
+#		return hashed_text
+#	return False
+        
 # DB Management
 import sqlite3 
 conn = sqlite3.connect('tesdatabase.db')
@@ -72,7 +73,8 @@ def universel(finalip,my_poids,my_age) :
     age = my_age
     
     create_usertable()
-    hashed_pswd = make_hashes(ipadress)
+    #hashed_pswd = make_hashes(ipadress)
+    hashed_pswd = ipadress #on met ca a la place
     add_userdata(age,hashed_pswd,poids)
 def main():
     # Register your pages
