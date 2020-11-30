@@ -5,7 +5,7 @@ Created on Thu Oct 29 12:12:13 2020
 @author: H
 """
 #import hashlib
-import matplotlib.pyplot as plt
+
 import pandas as pd
 import streamlit as st
 import awesome_streamlit as ast
@@ -16,7 +16,6 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 #import webbrowser
-import json
 from ip2geotools.databases.noncommercial import DbIpCity
 from cryptography.fernet import Fernet
 from re import escape 
@@ -730,22 +729,6 @@ def decrypt_message(encrypted_message):
     f = Fernet(key)
     decrypted_message = f.decrypt(encrypted_message)
     return(decrypted_message.decode())
-def importances(listzero):
-    importances = [0.14825714, 0.28269378, 0.00829022, 0.17628417, 0.00841144,
-           0.00216457, 0.04985012, 0.00410238, 0.23470564, 0.02176112,
-           0.05013109, 0.01334832]
-    
-    
-    indices = [ 5,  7,  2,  4, 11,  9,  6, 10,  0,  3,  8,  1]
-    
-    # style du graphique 
-    plt.style.use('fivethirtyeight')
-    
-    plt.figure(1)
-    plt.title('Importances des variables')
-    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-    plt.yticks(range(len(indices)), [listzero[i] for i in indices])
-    plt.xlabel('Importance relative')
 
 def doctolib(maladie):
     url = 'https://www.doctolib.fr/' 
