@@ -653,7 +653,7 @@ def page_4():
         )
     
     
-    image = Image.open('stoptabac.jpg')
+    image = Image.open('stoptabacversion.jpg')
     st.image(image,use_column_width=True)
     st.write('')
     
