@@ -111,22 +111,29 @@ body{
 	color: #1da1f2;
 }
 
-.toggle_button ul li a.instagram .icon{
-	background: #c32aa3;
+.toggle_button ul li a.pinterest .icon{
+	background: #ff0000;
+;
 }
 
-.toggle_button ul li a.instagram .text{
+.toggle_button ul li a.pinterest .text{
 	color: #c32aa3;
 }
 
-.toggle_button ul li a.reddit .icon{
-	background: #ff4500;
+.toggle_button ul li a.linkedin .icon{
+	background: #007bb6;
 }
 
-.toggle_button ul li a.reddit .text{
-	color: #ff4500;
+.toggle_button ul li a.linkedin .text{
+	color: #007bb6
+}
+.toggle_button ul li a.whatsapp .icon{
+	background:linear-gradient(45deg, #E5FFCC, #1EBEA5, #00E676, #D0E9EA, #EDF8F5, #ffffff);
 }
 
+.toggle_button ul li a.whatsapp .text{
+	color: #ff4800;
+}
 .toggle_button.active{
 	height: 325px;
 }
@@ -161,7 +168,7 @@ body{
 							</a>
 						</li>
 						<li>
-							<a href="#" class="sm facebook">
+							<a onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=https://askwhysiteprototyp.herokuapp.com/','_blank')" class="sm facebook">
 								<span class="icon">
 									<i class="fab fa-facebook-f"></i>
 								</span>
@@ -169,27 +176,36 @@ body{
 							</a>
 						</li>
 						<li>
-							<a href="#" class="sm twitter">
+							<a onclick="window.open('https://twitter.com/share?url=$https://askwhysiteprototyp.herokuapp.com/','_blank')" class="sm twitter">
 								<span class="icon">
 									<i class="fab fa-twitter"></i>
 								</span>
 								<span class="text">Twitter</span>
 							</a>
 						</li>
+
 						<li>
-							<a href="#" class="sm instagram">
+							<a onclick="window.open('https://www.linkedin.com/sharing/share-offsite/?url=https://askwhysiteprototyp.herokuapp.com/','_blank')" class="sm linkedin">
 								<span class="icon">
-									<i class="fab fa-instagram"></i>
+									<i class="fab fa-linkedin-in"></i>
 								</span>
-								<span class="text">Instagram</span>
+								<span class="text">Linkedin</span>
 							</a>
 						</li>
 						<li>
-							<a href="#" class="sm reddit">
+							<a onclick="window.open('https://pinterest.com/pin/create/bookmarklet/?url=$https://askwhysiteprototyp.herokuapp.com/','_blank')" class="sm pinterest">
 								<span class="icon">
-									<i class="fab fa-reddit-alien"></i>
+									<i class="fab fa-pinterest"></i>
 								</span>
-								<span class="text">Reddit</span>
+								<span class="text">Pinterest</span>
+							</a>
+						</li>
+						<li>
+							<a href="" class="sm whatsapp">
+								<span class="icon">
+									<i class="fab fa-whatsapp"></i>
+								</span>
+								<span class="text">Whatsapp</span>
 							</a>
 						</li>
 					</ul>

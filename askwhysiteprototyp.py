@@ -5,6 +5,7 @@ Created on Thu Oct 29 12:12:13 2020
 @author: H
 """
 #import hashlib
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 import awesome_streamlit as ast
@@ -14,15 +15,15 @@ import pickle
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-
+#import webbrowser
 import json
-
-
-
+from ip2geotools.databases.noncommercial import DbIpCity
+from cryptography.fernet import Fernet
+from re import escape 
 file = open("data.json","r+")
 file. truncate(0)
 file. close()
-
+encryption = True
 diagnostic= ['','','','']
 
 
@@ -48,7 +49,7 @@ import codecs
 import streamlit.components.v1 as components
 
 # Custom Components Fxn
-def calculator(calc_html,width=750,height=340):
+def calculator(calc_html,width=720,height=325):
 	calc_file = codecs.open(calc_html,'r')
 	page = calc_file.read()
 	components.html(page,width=width,height=height,scrolling=False)
@@ -61,7 +62,7 @@ def write():
     with st.spinner("Loading Home ..."):
         ast.shared.components.title_awesome("")
 
-# Security
+ #Security
 #passlib,hashlib,bcrypt,scrypt
 
 #def make_hashes(poids):
@@ -76,6 +77,10 @@ def write():
 import sqlite3 
 Kontakt = sqlite3.connect('Contactuser.db')
 k = Kontakt.cursor()
+crypt = sqlite3.connect('info_user_crypted.db')
+
+cr = crypt.cursor()
+
 conn = sqlite3.connect('info_user_2011.db')
 
 c = conn.cursor()
@@ -104,14 +109,19 @@ def rgpd():
 
 # données de l'utilisateur
 def create_usertable():
-	c.execute('CREATE TABLE IF NOT EXISTS userstable(age INT, ipadress TEXT,poids INT,taille INT,Symptomes TXT, date TXT)')
-
+    if encryption == True :
+        cr.execute('CREATE TABLE IF NOT EXISTS userstable(age TEXT, ipadress TEXT,poids TEXT,taille TEXT,Symptomes TXT, date TXT)')
+    else :
+        c.execute('CREATE TABLE IF NOT EXISTS userstable(age INT, ipadress TEXT,poids INT,taille INT,Symptomes TXT, date TXT)')    
 
 def add_userdata(age,ipadress,poids,taille,symptomes):
     date = str(datetime.now())
-    c.execute('INSERT INTO userstable(age,ipadress,poids,taille,date,Symptomes) VALUES (?,?,?,?,?,?)',(age,ipadress,poids,taille,date,symptomes))
-    conn.commit()
-
+    if encryption == True :
+        cr.execute('INSERT INTO userstable(age,ipadress,poids,taille,date,Symptomes) VALUES (?,?,?,?,?,?)',(age,ipadress,poids,taille,date,symptomes))
+        crypt.commit()
+    else :
+        c.execute('INSERT INTO userstable(age,ipadress,poids,taille,date,Symptomes) VALUES (?,?,?,?,?,?)',(age,ipadress,poids,taille,date,symptomes))
+        conn.commit()
 
 def voir_contact():
     k.execute('SELECT * FROM Kontakt')
@@ -119,9 +129,13 @@ def voir_contact():
     return data2
 
 def view_all_users():
-	c.execute('SELECT * FROM userstable')
-	data = c.fetchall()
-	return data
+    if encryption == True :
+        cr.execute('SELECT * FROM userstable')
+        data = cr.fetchall()
+    else :
+        c.execute('SELECT * FROM userstable')
+        data = c.fetchall()
+    return data
 #cree toi meme  un identifiant et un mot de passe intra code histoire de creer un admin et avec ça t'as accès a la focntion view_all_users()
 
 
@@ -142,7 +156,7 @@ def main():
         "Home" : page_home  ,  
         "Covid-19": page_first,
         "Diabète": page_second,
-        "Maladie Cardiaque": page_3,
+        "Maladie cardiovasculaire": page_3,
         "Conseils & Partenariats": page_4,
         "Contact" : page_5,
         "Admin": page_6,
@@ -198,8 +212,8 @@ def main():
     go= st.sidebar.button("Partager ")
 
     if go :
-        calculator('index.html')
-        
+        calculator('indextestpartage.html')
+
         
     if rej :
         page_newletter()
@@ -224,18 +238,23 @@ def prediction(maladie):
         my_taille = int(st.number_input("Combien mesurez-vous ?",115,260))
         st.write("Vous mesurez ",my_taille, " cm ")
     IMC = (my_poids/((my_taille/100)**2))
-    st.write("Votre IMC est de ",IMC)
+    st.write('Un IMC normal est situé entre 18,5 et 25' )
+    if (IMC >= 18.5 ) and (IMC<=25):
+        z = "Votre IMC est de " + str(IMC)
+        st.success(z)
+    else :
+        z = "Votre IMC est de " + str(IMC)
+        st.error(z)
     
     st.write( "Quels sont vos symptômes ?")         
-
     if (maladie == "Covid") :
         num_maladie = 0
         symptoms = st.multiselect(
             'Sélectionnez vos symptômes.',
             ['Difficultés pour respirer','Fièvre' ,'Toux sèche','Mal de gorge', 'Nez qui coule',
-             'Asthme' , 'Maladie pulmonaire chronique' ,'Maux de tête', 'Maladie cardiaque', 'Diabète','HyperTension',
-             'Fatigue', 'Gastro' 
-             ,'Voyage à l\'étranger','Contact with COVID Patient',   'Présence dans des grands regroupements', 
+             'Asthme' , 'Maladie pulmonaire chronique' ,'Maux de tête', 'Maladie cardiovasculaire', 'Diabète','Hypertension',
+             'Fatigue', 'Gastro-entérite' 
+             ,'Voyage à l\'étranger','Contact avec des patients Covid',   'Présence dans des grands regroupements', 
              'Visite d\'endroits clôts','Famille travaillant dans des endroits exposés',
              'Port du masque'],
             [])
@@ -247,9 +266,9 @@ def prediction(maladie):
             st.write('Vous avez sélectionné', len(symptoms),' symptômes :')
             
         listsymptomsref = ['Difficultés pour respirer','Fièvre' ,'Toux sèche','Mal de gorge', 'Nez qui coule',
-             'Asthme' , 'Maladie pulmonaire chronique' ,'Maux de tête', 'Maladie cardiaque', 'Diabète','HyperTension',
-             'Fatigue', 'Gastro' 
-             ,'Voyage à l\'étranger','Contact with COVID Patient',   'Présence dans des grands regroupements', 
+             'Asthme' , 'Maladie pulmonaire chronique' ,'Maux de tête', 'Maladie cardiovasculaire', 'Diabète','Hypertension',
+             'Fatigue', 'Gastro-entérite' 
+             ,'Voyage à l\'étranger','Contact avec des patients Covid',   'Présence dans des grands regroupements', 
              'Visite d\'endroits clôts','Famille travaillant dans des endroits exposés',
              'Port du masque']
         
@@ -262,12 +281,13 @@ def prediction(maladie):
     
     elif (maladie == "Diabete") :
         num_maladie = 1
+        genre = st.radio("Vous êtes :",('un homme', 'une femme'))            
         symptoms = st.multiselect(
             'Sélectionnez vos symptômes.',
-            ['Age', 'Gender', 'Polyuria', 'Polydipsia', 'sudden weight loss',
-       'weakness', 'Polyphagia', 'Genital thrush', 'visual blurring',
-       'Itching', 'Irritability', 'delayed healing', 'partial paresis',
-       'muscle stiffness', 'Alopecia', 'Obesity'],
+            ['Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Perte de poids soudaine',
+       'Faiblesse', 'Faim excessive(polyphagie)', 'Mycose génitale', 'Vision floue',
+       'Démangeaisons', 'Irritabilité', 'Cicatrisation lente', 'Parésie (paralysie partielle)',
+       'Rigidité musculaire', 'Alopécie', 'Obésité'],
             [])
         
         if symptoms == []:
@@ -276,19 +296,54 @@ def prediction(maladie):
         else :
             st.write('Vous avez sélectionné', len(symptoms),' symptômes :')
             
-        listsymptomsref = ['Age', 'Gender', 'Polyuria', 'Polydipsia', 'sudden weight loss',
-       'weakness', 'Polyphagia', 'Genital thrush', 'visual blurring',
-       'Itching', 'Irritability', 'delayed healing', 'partial paresis',
-       'muscle stiffness', 'Alopecia', 'Obesity']
+        listsymptomsref = ['Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Perte de poids soudaine',
+       'Faiblesse', 'Faim excessive(polyphagie)', 'Mycose génitale', 'Vision floue',
+       'Démangeaisons', 'Irritabilité', 'Cicatrisation lente', 'Parésie (paralysie partielle)',
+       'Rigidité musculaire', 'Alopécie', 'Obésité']
         
-        listzero = [0,0,0,0,0 ,0, 0,0, 
+        listzero = [0,0,0 ,0, 0,0, 
             0, 0 ,0,0,0,0,0,0]
     
         with open('RF_diabete.pkl', 'rb') as f:
             lgr = pickle.load(f)
+        agegenre = [my_age]    
+        if genre == 'un homme' :
+            agegenre = agegenre + [1]
+        else :
+            agegenre = agegenre + [0]
+  
+    elif (maladie == "Maladie_cardiovasculaire") :
+        num_maladie = 2
+        genre = st.radio("Vous êtes :",('un homme', 'une femme'))
+        symptoms = st.multiselect(
+            'Sélectionnez vos symptômes.',
+        ['Fumeur de cigarette','Fumeur d\'autres produits à base de tabac' ,'Hypertension','Obésité', 'Diabète',
+         'Syndrôme métabolique' , 'Utilisation de produits dopants ou de drogues stimulantes' ,'Antécédents cardiaques familiaux' 
+         ,'Antécedents de pré-éclampsie', 'Antécédents de pontage coronarien','Maladies respiratoires'],[])
+
+        
+        if symptoms == []:
+            st.write('')
+        
+        else :
+            if len(symptoms) ==1 :
+                st.write('Vous avez sélectionné', len(symptoms),' symptôme :')
+            else :
+                st.write('Vous avez sélectionné', len(symptoms),' symptômes :')
+            
+            
+        listsymptomsref = ['Fumeur de cigarette','Fumeur d\'autres produits à base de tabac' ,'Hypertension','Obésité', 'Diabète',
+         'Syndrôme métabolique' , 'Utilisation de produits dopants ou de drogues stimulantes' ,'Antécédents cardiaques familiaux' 
+         ,'Antécedents de pré-éclampsie', 'Antécédents de pontage coronarien','Maladies respiratoires']
+        
+        listzero = [0,0,0,0,0,0,0,0,0,0,0]
     
-    
-   
+        with open('RF_cardiacpart1.pkl', 'rb') as f:
+            lgr = pickle.load(f)   
+        if genre == 'un homme' :
+            listzero = [1] + listzero
+        else :
+            listzero =  [2] + listzero 
         
     for i in range(len(symptoms)) :
         for w in listsymptomsref :
@@ -352,7 +407,8 @@ def prediction(maladie):
     
     
 
-        
+    if (maladie ==  "Diabete") :
+        listzero = agegenre + listzero
     Predi = pd.DataFrame(listzero) 
     Predi = Predi.T
     result = lgr.predict(Predi)
@@ -374,30 +430,86 @@ def prediction(maladie):
     with col4:            
         grvdoc = st.button("C'est grave Doc ?")    
     if grvdoc :
-        universel(finalip,my_poids,my_age,my_taille,symptoms)
+        if encryption == True :
+            
+            ipfinale = encrypt_message(finalip)
+            my_poidsf = encrypt_message(my_poids)
+            my_agef = encrypt_message(my_age)
+            my_taillef = encrypt_message(my_taille)
+            symptomsf = encrypt_message(symptoms)                                
+        else :
+            ipfinale = finalip 
+        universel(ipfinale,my_poidsf,my_agef,my_taillef,symptomsf)
         if result[0] == 1 :  
             global diagnostic
             diagnostic[num_maladie] = "Il semblerait que vous soyez positif au " + str(maladie)
             st.error(diagnostic[num_maladie])
+            st.write("Nous vous conseillons le diagnostic d'un vrai médecin")
+            prenezrendez = " [**Prenez un rendez-vous près de chez vous avec Doctolib**](" + doctolib(maladie) +")"
+            st.write(prenezrendez)
         if result[0] == 0 :
             diagnostic[num_maladie] ="Il semblerait que vous soyez négatif au " + str(maladie)
             st.success(diagnostic[num_maladie])
-        st.write(lgr.predict_proba(Predi))
+            st.write("Vous demeurez inquiet malgré cet avis?")
+            prenezrendez = " [**Prenez un rendez-vous près de chez vous avec Doctolib**](" + doctolib(maladie) +")"
+            st.write(prenezrendez)
+        #st.write(lgr.predict_proba(Predi)) 
+        with st.beta_expander("Détails de l'auto-diagnostic"):
+            affichergras = '**' +'Risques de '+ str(maladie) + '**'
+            st.write(affichergras)
+            st.write(""" 
+             Cette figure vous montre l'importance relative de chacun des symptômes dans notre prédiction.
+         """)
+            if maladie == "Diabete" :
+                impor_varia = "importances_variablesDiabete.png"
+            elif maladie == "Covid":
+                impor_varia= "importances_variablesCovid.png"
+            elif maladie == "Maladie_cardiovasculaire" :
+                impor_varia = "importances_variables.png"
+            image = Image.open(impor_varia)
+            st.image(image,use_column_width=True)
+            if len(symptoms) ==1 :
+                st.write('Vous avez sélectionné le symptôme : ') 
+            else :
+                st.write('Vous avez sélectionné les symptômes : ')
+            for i in symptoms :
+                correspondance = str(i) + ' qui a une importance de ' + str(importance_sympt(i,maladie,symptoms,listsymptomsref))
+                st.write(correspondance)
+            st.write("""**Autres risques**""")
+            if (IMC>=25):
+                st.write("""Nous avons remarqué un IMC anormal. Le poids est un **facteur de risques** pour un grand nombre de **maladies graves**. 
+                         Ainsi nous vous encourageons à la **pratique du sport** et à une **alimentation plus saine**. Nos partenaires Forest Hill et CopperBranch proposent des offres qui pourrait grandement vous 
+                         intéresser, n'hésitez pas à faire un tour dans notre rubrique ***Conseils&Partenariats***  """)
+                st.write('')
+            elif risquespoids(symptoms) : 
+                st.write("""Nous avons remarqué que vous êtes atteint d'obésité. Or le poids est un **facteur de risques** pour un grand nombre de **maladie**. 
+                         Ainsi nous vous encourageons à la **pratique du sport** et à une **alimentation plus saine**. Nos partenaires Forest Hill et CopperBranch proposent des offres qui pourrait grandement vous 
+                         intéresser, n'hésitez pas à faire un tour dans notre rubrique ***Conseils&Partenariats***""")
+                st.write('')
+            
+            if risquesfumeur(symptoms) : 
+                st.write("""Nous avons remarqué que vous êtes fumeur. Or fumer est un **facteur de risques** pour un grand nombre de **maladies graves**. 
+                         Ainsi nous vous encourageons à **arrêter de fumer**. Notre partenaire Assurance Maladie propose une aide qui pourrait grandement vous 
+                         intéresser, n'hésitez pas à faire un tour dans notre rubrique ***Conseils&Partenariats***""")
+            st.write('')
+            
         st.warning("Vous voulez informer vos amis de vos résultats ? Faîtes le sur le réseau de votre choix !")
-        calculator('index.html')
-        #communication avec js via un fihcier json mais aussi pour les conseils
-        data = diagnostic
-        with open('data.json', 'w') as outfile:
-            json.dump(data, outfile)  
-        print(data)
+        calculator('indextestpartage.html')
+        # creatio dun fihcier json pour la communication pyhton -js via. On peut aussi en creer un pour les conseils
+        #data = diagnostic
+        #with open('data.json', 'w') as outfile:
+        #    json.dump(data, outfile)  
+        #print(data)
+        
+            
 
 # nous contacter
 def contact() :                
     creer_tablecontact()
     st.markdown("<h1 style='text-align: center; color: teal;'>Vous souhaitez nous contacter ?</h1>", unsafe_allow_html=True)
     
-    mail = st.text_input("Votre email", "email@nomdomaine" )
-    message = st.text_area("Votre message", "Dites-nous tout ! ")
+    mail = escape(st.text_input("Votre email", "email@nomdomaine" ))
+    message = escape(st.text_area("Votre message", "Dites-nous tout ! "))
     st.write("")
     okaysubmit = st.button("On envoie ?")
     if okaysubmit :
@@ -409,7 +521,7 @@ def contact() :
 def page_home():
 
     st.markdown("<h1 style='text-align: center; color: crimson;'>Ask Why</h1>", unsafe_allow_html=True)
-    
+
     #st.title("Ask Why")
     st.write("")
     
@@ -452,25 +564,27 @@ def page_home():
     st.write("")
     st.write("")
     st.write("")
-    st.write("Afin de d'améliorer ses services, Ask Why stocke certaines données. Toutefois, si vous souhaitez supprimer vos données, il suffit d'appuyer sur ce bouton")
+    st.write("Afin d'améliorer ses services, Ask Why stocke certaines données. Toutefois, si vous souhaitez supprimer vos données, il suffit d'appuyer sur ce bouton")
     rg = st.button("Supprimer mes données")
     if rg :
         rgpd()
         st.success("Vos données ont bien été supprimées !")
     
 def page_first():
-    st.markdown("<h1 style='text-align: center; color: black;'>Auto-diagnostic Covid-19</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: black;'>Auto-diagnostic : Covid-19</h1>", unsafe_allow_html=True)
     # ...
     maladie = "Covid"
     prediction(maladie)
      
 def page_second():
-    st.markdown("<h1 style='text-align: center; color: gray;'>Auto-diagnostic Diabète</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: gray;'>Auto-diagnostic : Diabète</h1>", unsafe_allow_html=True)
     # ...
     maladie = "Diabete"
     prediction(maladie)
 def page_3():
-    st.markdown("<h1 style='text-align: center; color: silver;'>Auto-diagnostic Maladie Cardiaque</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: silver;'>Auto-diagnostic : Maladie cardiovasculaire</h1>", unsafe_allow_html=True)
+    maladie = "Maladie_cardiovasculaire"
+    prediction(maladie)
     # ...
 def local_css(filename):
     with open(filename) as f:
@@ -490,6 +604,10 @@ def page_4():
     #icon("search")
     #selected = st.text_input("", "Search")
     #button_clicked = st.button("OK")
+    #sport forest hill
+    st.info("Why bénéficie d'un large réseau de partenaires et de nombreuses offres sur des produits qui pourront vous aider à vivre sainement et en harmonie avec votre corps.")
+    
+    st.write(""" #**Faire du sport** """)
     st.write(
             """
             Si vous êtes étudiant en Ile-de-France, Forest Hill propose une offre ultra intéressante sur ses salles de sports. Profitez-en en utilisant ce lien !
@@ -501,6 +619,45 @@ def page_4():
     image = Image.open('Forest-Hill.jpg')
 
     st.image(image,use_column_width=True)
+    st.write('')
+    #bioburger
+    st.write(""" #**Manger sainement** """)
+    st.write(
+            """
+            Vous êtes un bon vivant et voulait le rester tout en mangeant de délicieux burger? Profitez de notre partenariat avec Bioburger! 
+            [Partenariat Bioburger](https://www.bioburger.fr/menu/)
+"""
+        )
+    
+    
+    image = Image.open('bioburger.jpg')
+    st.image(image,use_column_width=True)
+    st.write('')
+    #copperbranch 
+    st.write(""" #**Manger sainement et végé** """)
+    st.write(
+            """
+            Vous êtes un bon vivant et voulait le rester tout en mangeant healthy? Profitez de notre partenariat avec CopperBranch! 
+            [Partenariat CopperBranch](https://copperbranch.fr/menu/)
+"""
+        )
+    
+    
+    image = Image.open('copperbranch.jpg')
+    st.image(image,use_column_width=True)
+    st.write('')
+    st.write(""" #**Arrêter de fumer** """)
+    st.write(
+            """
+                    [Partenariat Assurance Maladie](https://play.google.com/store/apps/details?id=fr.cnamts.tis&hl=fr)
+"""
+        )
+    
+    
+    image = Image.open('stoptabac.jpg')
+    st.image(image,use_column_width=True)
+    st.write('')
+    
 def page_5():
     contact()
     # ...
@@ -511,8 +668,8 @@ def page_6():
     
     # ...
 
-    id = st.text_input("Identifiant", "MohSaNat")
-    modepass = st.text_input("Mot de passe", "root")
+    id = escape(st.text_input("Identifiant", ""))
+    modepass = escape(st.text_input("Mot de passe", type="password"))
     submit = st.button("Vérifier")
     if submit :    
         if (id == admin) &(modepass == mdp):
@@ -526,16 +683,115 @@ def page_6():
              st.success("Hey Captain !")
         else : 
             st.error("Vous n'êtes pas admin")
-    print(diagnostic)
+    #print(diagnostic)
 #créer une newsletter/ notification pour les nouveaux ajouts de maladies / nouveaux partenanriats
 def page_newletter():
     st.title("Rejoignez notre Newsletter")
     st.write("Inscrivez-vous à notre newsletter et soyez informé des MAJ, des actus du site et plus encore")
-    newsmail = st.text_input("", "Votre email")
+    newsmail = escape(st.text_input("", "Votre email"))
     okaysubmit = st.button("Rejoindre")
     if okaysubmit :
         st.success("Bienvenue !")
     print(newsmail)
+
+
+def risquespoids(list):
+    for i in list:
+        if i == 'Obésité' :
+            return True 
+    return False   
+def risquesfumeur(list):
+    for i in list:
+        if i == 'Fumeur de cigarette' or i =='Fumeur d\'autres produits à base de tabac':
+            return True 
+    return False     
+
+def load_key():
+    """
+    Load the previously generated key
+    """
+    return open("secret.key", "rb").read()
+
+def encrypt_message(message):
+    """
+    Encrypts a message
+    """
+    key = load_key()
+    encoded_message = str(message).encode()
+    f = Fernet(key)
+    encrypted_message = f.encrypt(encoded_message)
+    return encrypted_message
+
+def decrypt_message(encrypted_message):
+    """
+    Decrypts an encrypted message
+    """
+    key = load_key()
+    f = Fernet(key)
+    decrypted_message = f.decrypt(encrypted_message)
+    return(decrypted_message.decode())
+def importances(listzero):
+    importances = [0.14825714, 0.28269378, 0.00829022, 0.17628417, 0.00841144,
+           0.00216457, 0.04985012, 0.00410238, 0.23470564, 0.02176112,
+           0.05013109, 0.01334832]
+    
+    
+    indices = [ 5,  7,  2,  4, 11,  9,  6, 10,  0,  3,  8,  1]
+    
+    # style du graphique 
+    plt.style.use('fivethirtyeight')
+    
+    plt.figure(1)
+    plt.title('Importances des variables')
+    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+    plt.yticks(range(len(indices)), [listzero[i] for i in indices])
+    plt.xlabel('Importance relative')
+
+def doctolib(maladie):
+    url = 'https://www.doctolib.fr/' 
+    response = DbIpCity.get(finalip, api_key='free')
+    ville = (response.city).lower()
+         
+    if maladie == 'Covid' : 
+        mala = 'depistage-covid-19-antigenique/'
+        url = url + mala + ville
+    elif maladie == 'Diabete' : 
+        mala = 'endocrinologue/'
+        url = url + mala + ville
+    elif maladie == 'Maladie_cardiovasculaire' : 
+        mala = 'cardiologue/'
+        url = url + mala + ville
+    return(url)
+#    webbrowser.open(url, new=0, autoraise=True)
+def importance_sympt(i,maladie,symptoms,listsymptomsref): 
+    if maladie =='Covid':
+        listref =  listsymptomsref
+        imp =[1.72809381e-01, 6.89347967e-02, 1.80658331e-01, 2.38706877e-01,
+       2.58662583e-04, 1.29277606e-03, 4.01682212e-04, 7.33057330e-05,
+       1.05832702e-03, 2.30918543e-04, 3.90299744e-03, 2.98444113e-05,
+       1.33384154e-04, 1.64637709e-01, 5.92551239e-02, 9.70373326e-02,
+       3.46950973e-03, 7.10904115e-03, 0.00000000e+00]
+    elif maladie == 'Diabete' :
+        listref = ['Age>= 40 ans','Etre un homme','Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Perte de poids soudaine',
+       'Faiblesse', 'Faim excessive(polyphagie)', 'Mycose génitale', 'Vision floue',
+       'Démangeaison', 'Irritabilité', 'Cicatrisation lente', 'Parésie (paralysie partielle)',
+       'Rigidité musculaire', 'Alopécie', 'Obésité']
+        
+        imp =  [0.09774926, 0.10490779, 0.21851173, 0.18322141, 0.06531913,
+       0.0200777 , 0.0355011 , 0.01981826, 0.02829822, 0.02653362,
+       0.03839536, 0.03080899, 0.04593732, 0.0266845 , 0.03823258,
+       0.02000303]
+    elif maladie == 'Maladie_cardiovasculaire' : 
+        imp = [0.14825714, 0.28269378, 0.00829022, 0.17628417, 0.00841144,
+           0.00216457, 0.04985012, 0.00410238, 0.23470564, 0.02176112,
+           0.05013109, 0.01334832]
+        listref = ['Etre un homme','Fumeur de cigarette','Fumeur d\'autres produits à base de tabac' ,'Hypertension','Obésité', 'Diabète',
+         'Syndrôme métabolique' , 'Utilisation de produits dopants ou de drogues stimulantes' ,'Antécédents cardiaques familiaux' 
+         ,'Antécedents de pré-éclampsie', 'Antécédents de pontage coronarien','Maladies respiratoires']
+    for w in listref :
+        if w == i :
+            return imp[listref.index(w)]
+
 
 if __name__ == "__main__":
     main()
