@@ -280,7 +280,7 @@ def prediction(maladie):
     
     elif (maladie == "Diabete") :
         num_maladie = 1
-        genre = st.radio("Vous êtes :",('un homme', 'une femme'))            
+        genre = st.radio("Vous êtes :",('une femme' ,'un homme' ))            
         symptoms = st.multiselect(
             'Sélectionnez vos symptômes.',
             ['Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Perte de poids soudaine',
@@ -313,7 +313,7 @@ def prediction(maladie):
   
     elif (maladie == "Maladie_cardiovasculaire") :
         num_maladie = 2
-        genre = st.radio("Vous êtes :",('un homme', 'une femme'))
+        genre = st.radio("Vous êtes :",('une femme' ,'un homme'))
         symptoms = st.multiselect(
             'Sélectionnez vos symptômes.',
         ['Fumeur de cigarette','Fumeur d\'autres produits à base de tabac' ,'Hypertension','Obésité', 'Diabète',
