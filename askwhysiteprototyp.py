@@ -22,7 +22,7 @@ from re import escape
 file = open("data.json","r+")
 file. truncate(0)
 file. close()
-encryption = True
+encryption = False
 diagnostic= ['','','','']
 
 
@@ -244,12 +244,11 @@ def prediction(maladie):
     else :
         z = "Votre IMC est de " + str(IMC)
         st.error(z)
-    
-    st.write( "Quels sont vos symptômes ?")         
+          
     if (maladie == "Covid") :
         num_maladie = 0
         symptoms = st.multiselect(
-            'Sélectionnez vos symptômes.',
+            'Sélectionnez vos symptômes :',
             ['Difficultés pour respirer','Fièvre' ,'Toux sèche','Mal de gorge', 'Nez qui coule',
              'Asthme' , 'Maladie pulmonaire chronique' ,'Maux de tête', 'Maladie cardiovasculaire', 'Diabète','Hypertension',
              'Fatigue', 'Gastro-entérite' 
@@ -282,11 +281,11 @@ def prediction(maladie):
         num_maladie = 1
         genre = st.radio("Vous êtes :",('une femme' ,'un homme' ))            
         symptoms = st.multiselect(
-            'Sélectionnez vos symptômes.',
-            ['Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Perte de poids soudaine',
-       'Faiblesse', 'Faim excessive(polyphagie)', 'Mycose génitale', 'Vision floue',
-       'Démangeaisons', 'Irritabilité', 'Cicatrisation lente', 'Parésie (paralysie partielle)',
-       'Rigidité musculaire', 'Alopécie', 'Obésité'],
+            'Sélectionnez vos symptômes :',
+            ['Urines abondantes(polyurie)', 'Soif excessive(polydipsie)', 'Obésité',
+       'Faiblesse', 'Faim excessive(polyphagie)', 'Vision floue',
+       'Démangeaisons', 'Irritabilité', 'Cicatrisation lente', 'Perte de poids soudaine', 'Parésie (paralysie partielle)',
+       'Rigidité musculaire', 'Alopécie', 'Mycose génitale'],
             [])
         
         if symptoms == []:
@@ -300,8 +299,7 @@ def prediction(maladie):
        'Démangeaisons', 'Irritabilité', 'Cicatrisation lente', 'Parésie (paralysie partielle)',
        'Rigidité musculaire', 'Alopécie', 'Obésité']
         
-        listzero = [0,0,0 ,0, 0,0, 
-            0, 0 ,0,0,0,0,0,0]
+        listzero = [0,0,0 ,0,0,0,0, 0 ,0,0,0,0,0,0]
     
         with open('RF_diabete.pkl', 'rb') as f:
             lgr = pickle.load(f)
@@ -315,7 +313,7 @@ def prediction(maladie):
         num_maladie = 2
         genre = st.radio("Vous êtes :",('une femme' ,'un homme'))
         symptoms = st.multiselect(
-            'Sélectionnez vos symptômes.',
+            'Sélectionnez vos symptômes :',
         ['Fumeur de cigarette','Fumeur d\'autres produits à base de tabac' ,'Hypertension','Obésité', 'Diabète',
          'Syndrôme métabolique' , 'Utilisation de produits dopants ou de drogues stimulantes' ,'Antécédents cardiaques familiaux' 
          ,'Antécedents de pré-éclampsie', 'Antécédents de pontage coronarien','Maladies respiratoires'],[])
@@ -427,7 +425,8 @@ def prediction(maladie):
     with col3:
         st.write("")  
     with col4:            
-        grvdoc = st.button("C'est grave Doc ?")    
+        grvdoc = st.button("C'est grave Doc ?")  
+
     if grvdoc :
         if encryption == True :
             
@@ -438,6 +437,11 @@ def prediction(maladie):
             symptomsf = encrypt_message(symptoms)                                
         else :
             ipfinale = finalip 
+            ipfinale = encrypt_message(finalip)
+            my_poidsf = my_poids
+            my_agef = my_age
+            my_taillef = my_taille
+            symptomsf = symptoms
         universel(ipfinale,my_poidsf,my_agef,my_taillef,symptomsf)
         if result[0] == 1 :  
             global diagnostic
